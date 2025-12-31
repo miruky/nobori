@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="description" content="README用のSVGバナーと見出し画像をブラウザで生成する" />
+    <link rel="icon" type="image/svg+xml" href="./logo.svg" />
+    <title>nobori - README用SVGバナージェネレータ</title>
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <img src="./logo.svg" width="44" height="44" alt="" aria-hidden="true" />
+        <div>
+          <h1>nobori</h1>
+          <p class="lead">README用のSVGバナーをブラウザだけで生成する</p>
+        </div>
+      </header>
+
+      <section class="preview-wrap" aria-label="プレビュー">
+        <div id="preview"></div>
+      </section>
+
+      <form id="controls">
+        <div class="field wide">
+          <label for="title">タイトル</label>
+          <input id="title" type="text" value="nobori" maxlength="40" />
+        </div>
+        <div class="field wide">
+          <label for="subtitle">サブタイトル(任意)</label>
+          <input id="subtitle" type="text" value="README banner generator" maxlength="60" />
+        </div>
+        <div class="field">
+          <label for="theme">テーマ</label>
+          <select id="theme"></select>
+        </div>
+        <div class="field">
+          <label for="pattern">柄</label>
+          <select id="pattern">
+            <option value="none">なし</option>
+            <option value="dots">水玉</option>
+            <option value="grid">方眼</option>
+            <option value="diagonal">斜線</option>
+            <option value="waves" selected>波</option>
+            <option value="seigaiha">青海波</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="size">サイズ</label>
+          <select id="size">
+            <option value="800x200" selected>800 × 200(標準)</option>
+            <option value="1280x320">1280 × 320(大)</option>
+            <option value="600x150">600 × 150(小)</option>
+            <option value="800x400">800 × 400(正方形寄り)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="align">配置</label>
+          <select id="align">
+            <option value="center" selected>中央</option>
+            <option value="left">左寄せ</option>
+          </select>
+        </div>
+      </form>
+
+      <div class="actions">
+        <button id="download" type="button" class="primary">SVGをダウンロード</button>
+        <button id="copy" type="button">SVGソースをコピー</button>
+        <span id="copied" role="status"></span>
+      </div>
+
+      <section class="usage">
+        <h2>READMEでの使い方</h2>
+        <p>
+          ダウンロードした <code>banner.svg</code> をリポジトリに置き、READMEの先頭で
+          <code>![バナー](docs/banner.svg)</code> のように参照する。SVGは外部フォントに
+          依存しないので、閲覧環境で見た目が崩れない。
+        </p>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

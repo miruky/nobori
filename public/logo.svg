@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="nobori">
+  <title>nobori</title>
+  <style>
+    svg {
+      --ink: #1f2328;
+      --accent: #3f51b5;
+      color: var(--ink);
+    }
+    @media (prefers-color-scheme: dark) {
+      svg { --ink: #e6edf3; --accent: #8c9aef; }
+    }
+  </style>
+  <g fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="36" y1="14" x2="36" y2="114"/>
+    <path d="M36 22 H100 L86 46 L100 70 H36"/>
+  </g>
+  <g stroke="var(--accent)" stroke-width="6" stroke-linecap="round">
+    <line x1="50" y1="38" x2="80" y2="38"/>
+    <line x1="50" y1="54" x2="70" y2="54"/>
+  </g>
+</svg>
