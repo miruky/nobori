@@ -10,13 +10,14 @@
   </head>
   <body>
     <main>
+      <p class="kicker">SVG Banner Generator</p>
       <header class="hero">
-        <img src="./logo.svg" width="44" height="44" alt="" aria-hidden="true" />
-        <div>
-          <h1>nobori</h1>
-          <p class="lead">README用のSVGバナーをブラウザだけで生成する</p>
-        </div>
+        <img src="./logo.svg" width="48" height="48" alt="" aria-hidden="true" />
+        <h1>nobori</h1>
       </header>
+      <p class="lead">
+        README用のSVGバナーと見出し画像を、ブラウザだけで作る。書き出すのは外部フォントにも画像にも依存しない自己完結のSVGなので、どの閲覧環境でも崩れない。
+      </p>
 
       <section class="preview-wrap" aria-label="プレビュー">
         <div id="preview"></div>
@@ -67,6 +68,7 @@
       <div class="actions">
         <button id="download" type="button" class="primary">SVGをダウンロード</button>
         <button id="copy" type="button">SVGソースをコピー</button>
+        <button id="copy-link" type="button">共有リンクをコピー</button>
         <span id="copied" role="status"></span>
       </div>
 
