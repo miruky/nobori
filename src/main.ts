@@ -8,6 +8,7 @@ import {
   type PatternName,
   type ThemeName,
 } from './banner';
+import { decodeState, encodeState, type ShareState } from './share';
 
 function query<T extends Element>(selector: string): T {
   const el = document.querySelector<T>(selector);
@@ -31,6 +32,32 @@ for (const [name, theme] of Object.entries(THEMES)) {
   themeSelect.append(option);
 }
 
+// HTMLの初期値を共有状態の既定とし、URLハッシュがあればそれで上書きする。
+const defaults: ShareState = readState();
+applyState(decodeState(location.hash, defaults));
+
+function readState(): ShareState {
+  return {
+    title: titleInput.value,
+    subtitle: subtitleInput.value,
+    theme: themeSelect.value as ThemeName,
+    pattern: patternSelect.value as PatternName,
+    size: sizeSelect.value,
+    align: alignSelect.value as 'left' | 'center',
+  };
+}
+
+function applyState(state: ShareState): void {
+  titleInput.value = state.title;
+  subtitleInput.value = state.subtitle;
+  themeSelect.value = state.theme;
+  patternSelect.value = state.pattern;
+  if ([...sizeSelect.options].some((option) => option.value === state.size)) {
+    sizeSelect.value = state.size;
+  }
+  alignSelect.value = state.align;
+}
+
 function currentOptions(): BannerOptions {
   const [width, height] = sizeSelect.value.split('x').map(Number);
   return {
@@ -50,6 +77,8 @@ function render(): void {
   try {
     currentSvg = renderBanner(currentOptions());
     preview.innerHTML = currentSvg;
+    // 現在の設定をURLハッシュへ畳む(履歴は汚さない)。コピーすればそのまま共有できる。
+    history.replaceState(null, '', `#${encodeState(readState())}`);
   } catch {
     // タイトル未入力の瞬間は直前のプレビューを残す
   }
@@ -79,6 +108,13 @@ query<HTMLButtonElement>('#download').addEventListener('click', () => {
 query<HTMLButtonElement>('#copy').addEventListener('click', () => {
   void navigator.clipboard.writeText(currentSvg).then(() => {
     copied.textContent = 'コピーした';
+    setTimeout(() => (copied.textContent = ''), 1600);
+  });
+});
+
+query<HTMLButtonElement>('#copy-link').addEventListener('click', () => {
+  void navigator.clipboard.writeText(location.href).then(() => {
+    copied.textContent = '共有リンクをコピーした';
     setTimeout(() => (copied.textContent = ''), 1600);
   });
 });
