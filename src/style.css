@@ -289,6 +289,28 @@ code {
   }
 }
 
+@keyframes preview-pop {
+  from {
+    opacity: 0.5;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes copied-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .kicker,
   .hero,
@@ -310,6 +332,12 @@ code {
   }
   #controls {
     animation-delay: 0.2s;
+  }
+  #preview.pop {
+    animation: preview-pop 0.4s var(--ease);
+  }
+  #copied:not(:empty) {
+    animation: copied-in 0.3s var(--ease);
   }
 }
 
