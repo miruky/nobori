@@ -83,6 +83,12 @@ describe('renderBanner', () => {
     expect(sizeOf(long)).toBeLessThan(sizeOf(short));
   });
 
+  it('極端に長いタイトルでも文字サイズは下限を下回らない', () => {
+    const svg = renderBanner({ title: 'あ'.repeat(200) });
+    const size = Number(/font-size="(\d+)" font-weight/.exec(svg)?.[1]);
+    expect(size).toBeGreaterThanOrEqual(12);
+  });
+
   it('タグの開閉が釣り合っている', () => {
     const svg = renderBanner({ title: 'バランス', subtitle: '確認', pattern: 'seigaiha' });
     for (const tag of ['svg', 'defs', 'pattern', 'text']) {
