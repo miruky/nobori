@@ -95,6 +95,17 @@ for (const control of [
   control.addEventListener('input', render);
 }
 
+// 選択を切り替えたときだけプレビューを軽く沈めて戻す(タイピング中は出さない)。
+function popPreview(): void {
+  preview.classList.remove('pop');
+  void preview.offsetWidth;
+  preview.classList.add('pop');
+}
+
+for (const select of [themeSelect, patternSelect, sizeSelect, alignSelect]) {
+  select.addEventListener('change', popPreview);
+}
+
 query<HTMLButtonElement>('#download').addEventListener('click', () => {
   const blob = new Blob([currentSvg], { type: 'image/svg+xml' });
   const url = URL.createObjectURL(blob);
@@ -103,6 +114,34 @@ query<HTMLButtonElement>('#download').addEventListener('click', () => {
   anchor.download = 'banner.svg';
   anchor.click();
   URL.revokeObjectURL(url);
+});
+
+// SVGをcanvasへ2倍解像度で焼いてPNGとして書き出す。READMEに直接置きたい人向け。
+query<HTMLButtonElement>('#download-png').addEventListener('click', () => {
+  const [width, height] = sizeSelect.value.split('x').map(Number);
+  const scale = 2;
+  const svgUrl = URL.createObjectURL(
+    new Blob([currentSvg], { type: 'image/svg+xml;charset=utf-8' }),
+  );
+  const image = new Image();
+  image.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = (width ?? 800) * scale;
+    canvas.height = (height ?? 200) * scale;
+    const ctx = canvas.getContext('2d');
+    ctx?.drawImage(image, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(svgUrl);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const pngUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = pngUrl;
+      anchor.download = 'banner.png';
+      anchor.click();
+      URL.revokeObjectURL(pngUrl);
+    }, 'image/png');
+  };
+  image.src = svgUrl;
 });
 
 query<HTMLButtonElement>('#copy').addEventListener('click', () => {
