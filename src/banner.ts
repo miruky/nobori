@@ -48,12 +48,57 @@ export const THEMES = {
     sub: '#8d5f6b',
     line: '#d9a6b3',
   },
+  ocean: {
+    label: '海',
+    from: '#0a4d68',
+    to: '#1b7a9e',
+    text: '#eef7fb',
+    sub: '#bfe0ec',
+    line: '#6fb3cc',
+  },
+  amber: {
+    label: '琥珀',
+    from: '#7a4a10',
+    to: '#c8882a',
+    text: '#fdf6ea',
+    sub: '#f0d8b0',
+    line: '#e0b270',
+  },
+  plum: {
+    label: '葡萄',
+    from: '#3d1f5c',
+    to: '#6b3fa0',
+    text: '#f4eefb',
+    sub: '#d6c4ea',
+    line: '#a585c9',
+  },
 } as const;
 
 export type ThemeName = keyof typeof THEMES;
 
-export const PATTERNS = ['none', 'dots', 'grid', 'diagonal', 'waves', 'seigaiha'] as const;
+export const PATTERNS = [
+  'none',
+  'dots',
+  'grid',
+  'diagonal',
+  'waves',
+  'seigaiha',
+  'cross',
+  'chevron',
+] as const;
 export type PatternName = (typeof PATTERNS)[number];
+
+/** 柄の表示名。UIのセレクトはこれを使って組み立てる。 */
+export const PATTERN_LABELS: Record<PatternName, string> = {
+  none: 'なし',
+  dots: '水玉',
+  grid: '方眼',
+  diagonal: '斜線',
+  waves: '波',
+  seigaiha: '青海波',
+  cross: '十字',
+  chevron: '山形',
+};
 
 export interface BannerOptions {
   title: string;
@@ -104,6 +149,14 @@ function patternDef(name: PatternName, line: string): string {
     <circle cx="0" cy="10" r="18"/>
     <circle cx="40" cy="10" r="18"/>
   </g>
+</pattern>`;
+    case 'cross':
+      return `<pattern id="pat" width="26" height="26" patternUnits="userSpaceOnUse">
+  <path d="M13 8v10M8 13h10" stroke="${line}" stroke-width="1.3" opacity="0.3"/>
+</pattern>`;
+    case 'chevron':
+      return `<pattern id="pat" width="28" height="14" patternUnits="userSpaceOnUse">
+  <path d="M0 12 L14 3 L28 12" fill="none" stroke="${line}" stroke-width="1.4" opacity="0.3"/>
 </pattern>`;
   }
 }
