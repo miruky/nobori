@@ -2,6 +2,8 @@
 
 import './style.css';
 import {
+  PATTERNS,
+  PATTERN_LABELS,
   THEMES,
   renderBanner,
   type BannerOptions,
@@ -31,6 +33,14 @@ for (const [name, theme] of Object.entries(THEMES)) {
   option.textContent = theme.label;
   themeSelect.append(option);
 }
+
+for (const name of PATTERNS) {
+  const option = document.createElement('option');
+  option.value = name;
+  option.textContent = PATTERN_LABELS[name];
+  patternSelect.append(option);
+}
+patternSelect.value = 'waves'; // 既定の柄
 
 // HTMLの初期値を共有状態の既定とし、URLハッシュがあればそれで上書きする。
 const defaults: ShareState = readState();
