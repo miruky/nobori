@@ -175,7 +175,11 @@ export function renderBanner(options: BannerOptions): string {
 
   const anchor = align === 'center' ? 'middle' : 'start';
   const x = align === 'center' ? width / 2 : Math.round(height * 0.32);
-  const titleSize = Math.round(Math.min(height * 0.26, width / Math.max(6, title.length)));
+  // 長いタイトルでも下限12pxは保ち、潰れて読めなくならないようにする。
+  const titleSize = Math.max(
+    12,
+    Math.round(Math.min(height * 0.26, width / Math.max(6, title.length))),
+  );
   const subSize = Math.max(11, Math.round(titleSize * 0.42));
   const titleY = subtitle ? height * 0.46 : height * 0.55;
   const subY = height * 0.68;
