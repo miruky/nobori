@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PATTERNS, THEMES, escapeXml, renderBanner } from './banner';
+import { PATTERNS, PATTERN_LABELS, THEMES, escapeXml, renderBanner } from './banner';
 
 describe('escapeXml', () => {
   it('5種の特殊文字を実体参照へ', () => {
@@ -89,6 +89,19 @@ describe('renderBanner', () => {
       const open = svg.match(new RegExp(`<${tag}[\\s>]`, 'g'))?.length ?? 0;
       const close = svg.match(new RegExp(`</${tag}>`, 'g'))?.length ?? 0;
       expect(open).toBe(close);
+    }
+  });
+});
+
+describe('テーマと柄の拡充', () => {
+  it('テーマは8種、柄はnone込みで8種', () => {
+    expect(Object.keys(THEMES)).toHaveLength(8);
+    expect(PATTERNS).toHaveLength(8);
+  });
+
+  it('すべての柄に表示名がある', () => {
+    for (const pattern of PATTERNS) {
+      expect(PATTERN_LABELS[pattern]).toBeTruthy();
     }
   });
 });
