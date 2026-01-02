@@ -1,6 +1,7 @@
 /*
   nobori デモ — 純白パネル+均一な箱をやめ、温度のある中立色に藍を一点。
   主役はライブプレビュー。区切りは罫線と余白で、影は使わない。
+  明暗は data-theme で切り替える(システム追従はJS側で解決)。
 */
 
 :root {
@@ -16,23 +17,22 @@
   --accent-soft: color-mix(in srgb, var(--accent) 10%, transparent);
 
   --sans: 'Hiragino Sans', 'Noto Sans JP', system-ui, sans-serif;
+  --serif: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', Georgia, serif;
   --mono: ui-monospace, 'SF Mono', Menlo, 'Roboto Mono', monospace;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #14161a;
-    --raise: #191c21;
-    --ink: #e8e6e1;
-    --ink-soft: #9aa0a8;
-    --ink-faint: #828892;
-    --line: #262a31;
-    --line-strong: #353b45;
-    --accent: #8c9aef;
-    --accent-ink: #14161a;
-    --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
-  }
+:root[data-theme='dark'] {
+  --bg: #14161a;
+  --raise: #191c21;
+  --ink: #e8e6e1;
+  --ink-soft: #9aa0a8;
+  --ink-faint: #828892;
+  --line: #262a31;
+  --line-strong: #353b45;
+  --accent: #8c9aef;
+  --accent-ink: #14161a;
+  --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 * {
@@ -52,16 +52,24 @@ body {
 main {
   max-width: 860px;
   margin: 0 auto;
-  padding: clamp(36px, 7vw, 80px) clamp(20px, 5vw, 32px) 96px;
+  padding: clamp(28px, 6vw, 64px) clamp(20px, 5vw, 32px) 96px;
 }
 
-/* ── ヘッダー ── */
+/* ── トップバー(キッカー+テーマ切替)── */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
 
 .kicker {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 0 0 16px;
+  margin: 0;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.28em;
@@ -76,6 +84,49 @@ main {
   background: var(--accent);
 }
 
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px 7px 10px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    border-color 0.18s var(--ease),
+    color 0.18s var(--ease);
+}
+
+.theme-toggle:hover {
+  border-color: var(--ink-faint);
+  color: var(--ink);
+}
+
+.theme-icon {
+  flex: none;
+  color: var(--accent);
+}
+
+.theme-label {
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.theme-toggle[data-effective='dark'] .theme-icon circle,
+.theme-toggle[data-effective='dark'] .rays {
+  display: none;
+}
+
+.theme-toggle[data-effective='light'] .moon {
+  display: none;
+}
+
+/* ── ヘッダー ── */
+
 .hero {
   display: flex;
   align-items: center;
@@ -83,8 +134,9 @@ main {
   margin-bottom: 8px;
 }
 
-.hero img {
+.mark {
   flex: none;
+  color: var(--ink);
 }
 
 h1 {
@@ -221,6 +273,10 @@ button.primary:hover {
   filter: saturate(1.1) brightness(1.04);
 }
 
+.theme-toggle:active {
+  transform: none;
+}
+
 #copied {
   font-size: 13px;
   color: var(--accent);
@@ -312,7 +368,7 @@ code {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .kicker,
+  .topbar,
   .hero,
   .lead,
   .preview-wrap,
