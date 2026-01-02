@@ -100,6 +100,35 @@ export const PATTERN_LABELS: Record<PatternName, string> = {
   chevron: '山形',
 };
 
+/**
+ * 書体は外部フォントを読み込まずシステムフォントスタックで指定する。
+ * 出力SVGを自己完結に保つための制約で、明朝・ゴシック・等幅の三系統を用意する。
+ */
+export const FONTS = {
+  sans: {
+    label: 'ゴシック',
+    stack:
+      "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif",
+  },
+  serif: {
+    label: '明朝',
+    stack:
+      "'Hiragino Mincho ProN', 'Yu Mincho', YuMincho, 'Noto Serif JP', Georgia, 'Times New Roman', serif",
+  },
+  mono: {
+    label: '等幅',
+    stack: "ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace",
+  },
+} as const;
+export type FontName = keyof typeof FONTS;
+
+/** 背景の塗り。グラデーションか、テーマ主色のべた塗りか。 */
+export const BACKGROUNDS = {
+  gradient: 'グラデーション',
+  solid: 'べた塗り',
+} as const;
+export type BackgroundName = keyof typeof BACKGROUNDS;
+
 export interface BannerOptions {
   title: string;
   subtitle?: string;
@@ -109,6 +138,8 @@ export interface BannerOptions {
   pattern?: PatternName;
   align?: 'left' | 'center';
   radius?: number;
+  font?: FontName;
+  background?: BackgroundName;
 }
 
 export function escapeXml(text: string): string {
@@ -172,6 +203,10 @@ export function renderBanner(options: BannerOptions): string {
   const pattern = options.pattern ?? 'none';
   const align = options.align ?? 'center';
   const radius = Math.max(0, options.radius ?? 12);
+  const fontStack = FONTS[options.font ?? 'sans'].stack;
+  const background = options.background ?? 'gradient';
+  // 明朝・等幅は字面が小さく見えるので太字を避け、字間も詰めすぎない。
+  const titleWeight = options.font === 'serif' ? 600 : 700;
 
   const anchor = align === 'center' ? 'middle' : 'start';
   const x = align === 'center' ? width / 2 : Math.round(height * 0.32);
@@ -184,9 +219,16 @@ export function renderBanner(options: BannerOptions): string {
   const titleY = subtitle ? height * 0.46 : height * 0.55;
   const subY = height * 0.68;
 
-  const fontStack =
-    "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif";
   const def = patternDef(pattern, theme.line);
+  // べた塗りは主色を使い、グラデーションは defs の linearGradient を参照する。
+  const bgFill = background === 'solid' ? theme.from : 'url(#bg)';
+  const gradientDef =
+    background === 'solid'
+      ? ''
+      : `\n  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="${theme.from}"/>
+    <stop offset="1" stop-color="${theme.to}"/>
+  </linearGradient>`;
   const patternRect =
     pattern === 'none'
       ? ''
@@ -196,15 +238,11 @@ export function renderBanner(options: BannerOptions): string {
     : '';
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="${escapeXml(title)}">
-<defs>
-  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0" stop-color="${theme.from}"/>
-    <stop offset="1" stop-color="${theme.to}"/>
-  </linearGradient>
+<defs>${gradientDef}
 ${def}
 </defs>
-  <rect width="${width}" height="${height}" rx="${radius}" fill="url(#bg)"/>${patternRect}
-  <text x="${x}" y="${titleY}" text-anchor="${anchor}" dominant-baseline="middle" font-family="${fontStack}" font-size="${titleSize}" font-weight="700" letter-spacing="0.02em" fill="${theme.text}">${escapeXml(title)}</text>${subtitleText}
+  <rect width="${width}" height="${height}" rx="${radius}" fill="${bgFill}"/>${patternRect}
+  <text x="${x}" y="${titleY}" text-anchor="${anchor}" dominant-baseline="middle" font-family="${fontStack}" font-size="${titleSize}" font-weight="${titleWeight}" letter-spacing="0.02em" fill="${theme.text}">${escapeXml(title)}</text>${subtitleText}
 </svg>
 `;
 }
