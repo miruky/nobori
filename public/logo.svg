@@ -2,12 +2,12 @@
   <title>nobori</title>
   <style>
     svg {
-      --ink: #1f2328;
+      --ink: #20242a;
       --accent: #3f51b5;
       color: var(--ink);
     }
     @media (prefers-color-scheme: dark) {
-      svg { --ink: #e6edf3; --accent: #8c9aef; }
+      svg { --ink: #e8e6e1; --accent: #8c9aef; }
     }
   </style>
   <g fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
