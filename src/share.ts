@@ -6,7 +6,16 @@
  * 手で書き換えたURLでも安全に復元できる。
  */
 
-import { PATTERNS, THEMES, type PatternName, type ThemeName } from './banner';
+import {
+  BACKGROUNDS,
+  FONTS,
+  PATTERNS,
+  THEMES,
+  type BackgroundName,
+  type FontName,
+  type PatternName,
+  type ThemeName,
+} from './banner';
 
 export interface ShareState {
   title: string;
@@ -15,6 +24,8 @@ export interface ShareState {
   pattern: PatternName;
   size: string;
   align: 'left' | 'center';
+  font: FontName;
+  background: BackgroundName;
 }
 
 const SIZE_RE = /^\d{2,5}x\d{2,5}$/;
@@ -27,6 +38,8 @@ export function encodeState(state: ShareState): string {
   params.set('p', state.pattern);
   params.set('sz', state.size);
   params.set('a', state.align);
+  params.set('f', state.font);
+  params.set('bg', state.background);
   return params.toString();
 }
 
@@ -39,6 +52,8 @@ export function decodeState(hash: string, fallback: ShareState): ShareState {
   const pattern = params.get('p');
   const size = params.get('sz');
   const align = params.get('a');
+  const font = params.get('f');
+  const background = params.get('bg');
   return {
     title,
     // 共有状態では、省略されたサブタイトルは「空」を意味する(既定で埋めない)。
@@ -50,5 +65,10 @@ export function decodeState(hash: string, fallback: ShareState): ShareState {
         : fallback.pattern,
     size: size !== null && SIZE_RE.test(size) ? size : fallback.size,
     align: align === 'left' || align === 'center' ? align : fallback.align,
+    font: font !== null && font in FONTS ? (font as FontName) : fallback.font,
+    background:
+      background !== null && background in BACKGROUNDS
+        ? (background as BackgroundName)
+        : fallback.background,
   };
 }
