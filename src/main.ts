@@ -2,15 +2,27 @@
 
 import './style.css';
 import {
+  BACKGROUNDS,
+  FONTS,
   PATTERNS,
   PATTERN_LABELS,
   THEMES,
   renderBanner,
+  type BackgroundName,
   type BannerOptions,
+  type FontName,
   type PatternName,
   type ThemeName,
 } from './banner';
 import { decodeState, encodeState, type ShareState } from './share';
+import {
+  PREF_LABEL,
+  THEME_KEY,
+  effectiveTheme,
+  nextPref,
+  resolvePref,
+  type ThemePref,
+} from './theme';
 
 function query<T extends Element>(selector: string): T {
   const el = document.querySelector<T>(selector);
@@ -22,29 +34,62 @@ const titleInput = query<HTMLInputElement>('#title');
 const subtitleInput = query<HTMLInputElement>('#subtitle');
 const themeSelect = query<HTMLSelectElement>('#theme');
 const patternSelect = query<HTMLSelectElement>('#pattern');
+const fontSelect = query<HTMLSelectElement>('#font');
+const backgroundSelect = query<HTMLSelectElement>('#background');
 const sizeSelect = query<HTMLSelectElement>('#size');
 const alignSelect = query<HTMLSelectElement>('#align');
 const preview = query<HTMLDivElement>('#preview');
 const copied = query<HTMLSpanElement>('#copied');
 
-for (const [name, theme] of Object.entries(THEMES)) {
-  const option = document.createElement('option');
-  option.value = name;
-  option.textContent = theme.label;
-  themeSelect.append(option);
+function fillSelect(select: HTMLSelectElement, entries: [string, string][]): void {
+  for (const [value, label] of entries) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = label;
+    select.append(option);
+  }
 }
 
-for (const name of PATTERNS) {
-  const option = document.createElement('option');
-  option.value = name;
-  option.textContent = PATTERN_LABELS[name];
-  patternSelect.append(option);
-}
+fillSelect(
+  themeSelect,
+  Object.entries(THEMES).map(([name, theme]) => [name, theme.label]),
+);
+fillSelect(
+  patternSelect,
+  PATTERNS.map((name) => [name, PATTERN_LABELS[name]]),
+);
+fillSelect(
+  fontSelect,
+  Object.entries(FONTS).map(([name, font]) => [name, font.label]),
+);
+fillSelect(backgroundSelect, Object.entries(BACKGROUNDS));
 patternSelect.value = 'waves'; // 既定の柄
 
-// HTMLの初期値を共有状態の既定とし、URLハッシュがあればそれで上書きする。
-const defaults: ShareState = readState();
-applyState(decodeState(location.hash, defaults));
+// ── 状態の永続化(前回の設定を次回に引き継ぐ)──
+
+const STATE_KEY = 'nobori:state';
+
+function readStore(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStore(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // プライベートモード等で保存できなくても致命的ではない
+  }
+}
+
+// 優先順位: URLハッシュ(共有) > localStorage(前回) > HTMLの既定。
+const htmlDefaults: ShareState = readState();
+const stored = readStore(STATE_KEY);
+const base = stored ? decodeState(`#${stored}`, htmlDefaults) : htmlDefaults;
+applyState(decodeState(location.hash, base));
 
 function readState(): ShareState {
   return {
@@ -54,6 +99,8 @@ function readState(): ShareState {
     pattern: patternSelect.value as PatternName,
     size: sizeSelect.value,
     align: alignSelect.value as 'left' | 'center',
+    font: fontSelect.value as FontName,
+    background: backgroundSelect.value as BackgroundName,
   };
 }
 
@@ -62,6 +109,8 @@ function applyState(state: ShareState): void {
   subtitleInput.value = state.subtitle;
   themeSelect.value = state.theme;
   patternSelect.value = state.pattern;
+  fontSelect.value = state.font;
+  backgroundSelect.value = state.background;
   if ([...sizeSelect.options].some((option) => option.value === state.size)) {
     sizeSelect.value = state.size;
   }
@@ -78,6 +127,8 @@ function currentOptions(): BannerOptions {
     theme: themeSelect.value as ThemeName,
     pattern: patternSelect.value as PatternName,
     align: alignSelect.value as 'left' | 'center',
+    font: fontSelect.value as FontName,
+    background: backgroundSelect.value as BackgroundName,
   };
 }
 
@@ -87,8 +138,11 @@ function render(): void {
   try {
     currentSvg = renderBanner(currentOptions());
     preview.innerHTML = currentSvg;
+    const encoded = encodeState(readState());
     // 現在の設定をURLハッシュへ畳む(履歴は汚さない)。コピーすればそのまま共有できる。
-    history.replaceState(null, '', `#${encodeState(readState())}`);
+    history.replaceState(null, '', `#${encoded}`);
+    // 次回アクセスのために最後の設定を控える。
+    writeStore(STATE_KEY, encoded);
   } catch {
     // タイトル未入力の瞬間は直前のプレビューを残す
   }
@@ -99,6 +153,8 @@ for (const control of [
   subtitleInput,
   themeSelect,
   patternSelect,
+  fontSelect,
+  backgroundSelect,
   sizeSelect,
   alignSelect,
 ]) {
@@ -112,9 +168,43 @@ function popPreview(): void {
   preview.classList.add('pop');
 }
 
-for (const select of [themeSelect, patternSelect, sizeSelect, alignSelect]) {
+for (const select of [
+  themeSelect,
+  patternSelect,
+  fontSelect,
+  backgroundSelect,
+  sizeSelect,
+  alignSelect,
+]) {
   select.addEventListener('change', popPreview);
 }
+
+// ── UIテーマの切替(system → light → dark)──
+
+const themeToggle = query<HTMLButtonElement>('#theme-toggle');
+const themeLabel = query<HTMLSpanElement>('#theme-label');
+const darkQuery = matchMedia('(prefers-color-scheme: dark)');
+let themePref: ThemePref = resolvePref(readStore(THEME_KEY));
+
+function applyTheme(): void {
+  const effective = effectiveTheme(themePref, darkQuery.matches);
+  document.documentElement.dataset.theme = effective;
+  themeToggle.dataset.effective = effective;
+  themeLabel.textContent = PREF_LABEL[themePref];
+  themeToggle.setAttribute('aria-label', `テーマ切替(現在: ${PREF_LABEL[themePref]})`);
+}
+
+themeToggle.addEventListener('click', () => {
+  themePref = nextPref(themePref);
+  writeStore(THEME_KEY, themePref);
+  applyTheme();
+});
+
+darkQuery.addEventListener('change', () => {
+  if (themePref === 'system') applyTheme();
+});
+
+applyTheme();
 
 query<HTMLButtonElement>('#download').addEventListener('click', () => {
   const blob = new Blob([currentSvg], { type: 'image/svg+xml' });
