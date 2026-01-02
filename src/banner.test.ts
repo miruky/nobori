@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { PATTERNS, PATTERN_LABELS, THEMES, escapeXml, renderBanner } from './banner';
+import {
+  BACKGROUNDS,
+  FONTS,
+  PATTERNS,
+  PATTERN_LABELS,
+  THEMES,
+  escapeXml,
+  renderBanner,
+} from './banner';
 
 describe('escapeXml', () => {
   it('5種の特殊文字を実体参照へ', () => {
@@ -109,5 +117,40 @@ describe('テーマと柄の拡充', () => {
     for (const pattern of PATTERNS) {
       expect(PATTERN_LABELS[pattern]).toBeTruthy();
     }
+  });
+});
+
+describe('書体と背景', () => {
+  it('既定はゴシックで太字700', () => {
+    const svg = renderBanner({ title: 't' });
+    expect(svg).toContain('font-family="-apple-system');
+    expect(svg).toContain('font-weight="700"');
+  });
+
+  it('明朝・等幅を選ぶとフォントスタックが切り替わる', () => {
+    expect(renderBanner({ title: 't', font: 'serif' })).toContain('Hiragino Mincho');
+    expect(renderBanner({ title: 't', font: 'mono' })).toContain('ui-monospace');
+  });
+
+  it('明朝は線が太りすぎないよう600にする', () => {
+    expect(renderBanner({ title: 't', font: 'serif' })).toContain('font-weight="600"');
+  });
+
+  it('全書体・全背景に表示名がある', () => {
+    for (const font of Object.values(FONTS)) expect(font.label).toBeTruthy();
+    for (const label of Object.values(BACKGROUNDS)) expect(label).toBeTruthy();
+  });
+
+  it('グラデーション背景はlinearGradientを参照する', () => {
+    const svg = renderBanner({ title: 't', background: 'gradient' });
+    expect(svg).toContain('<linearGradient id="bg"');
+    expect(svg).toContain('fill="url(#bg)"');
+  });
+
+  it('べた塗り背景はlinearGradientを使わず主色で塗る', () => {
+    const svg = renderBanner({ title: 't', theme: 'forest', background: 'solid' });
+    expect(svg).not.toContain('<linearGradient');
+    expect(svg).not.toContain('url(#bg)');
+    expect(svg).toContain(`fill="${THEMES.forest.from}"`);
   });
 });
