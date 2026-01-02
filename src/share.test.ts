@@ -9,6 +9,8 @@ const base: ShareState = {
   pattern: 'waves',
   size: '800x200',
   align: 'center',
+  font: 'sans',
+  background: 'gradient',
 };
 
 describe('encodeState / decodeState', () => {
@@ -20,6 +22,8 @@ describe('encodeState / decodeState', () => {
       pattern: 'dots',
       size: '1280x320',
       align: 'left',
+      font: 'serif',
+      background: 'solid',
     };
     expect(decodeState(`#${encodeState(state)}`, base)).toEqual(state);
   });
@@ -29,12 +33,14 @@ describe('encodeState / decodeState', () => {
     expect(encoded).not.toContain('s=');
   });
 
-  it('未知のテーマ・柄・配置は既定へ落とす', () => {
-    const decoded = decodeState('#t=A&th=neon&p=plaid&a=top&sz=zzz', base);
+  it('未知のテーマ・柄・配置・書体・背景は既定へ落とす', () => {
+    const decoded = decodeState('#t=A&th=neon&p=plaid&a=top&sz=zzz&f=comic&bg=blur', base);
     expect(decoded.theme).toBe(base.theme);
     expect(decoded.pattern).toBe(base.pattern);
     expect(decoded.align).toBe(base.align);
     expect(decoded.size).toBe(base.size);
+    expect(decoded.font).toBe(base.font);
+    expect(decoded.background).toBe(base.background);
     expect(decoded.title).toBe('A');
   });
 
