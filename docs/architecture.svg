@@ -2,12 +2,12 @@
   <title>noboriの処理の流れ。フォーム入力からBannerOptionsを作り、純関数renderBannerがSVG文字列を返す。プレビュー・ダウンロード・コピーは同じ文字列を使う。</title>
   <style>
     svg {
-      --ink: #1f2328;
+      --ink: #20242a;
       --accent: #3f51b5;
       color: var(--ink);
     }
     @media (prefers-color-scheme: dark) {
-      svg { --ink: #e6edf3; --accent: #8c9aef; }
+      svg { --ink: #e8e6e1; --accent: #8c9aef; }
     }
     .box { fill: none; stroke: currentColor; stroke-width: 1.5; }
     .accent-box { fill: none; stroke: var(--accent); stroke-width: 2; }
