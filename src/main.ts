@@ -14,6 +14,7 @@ import {
   type PatternName,
   type ThemeName,
 } from './banner';
+import { markdownSnippet, randomDesign } from './presets';
 import { decodeState, encodeState, type ShareState } from './share';
 import {
   PREF_LABEL,
@@ -179,6 +180,17 @@ for (const select of [
   select.addEventListener('change', popPreview);
 }
 
+// 「おまかせ」はタイトル等を保ったまま見た目の4項目だけを振り直す。
+function shuffle(): void {
+  const design = randomDesign();
+  themeSelect.value = design.theme;
+  patternSelect.value = design.pattern;
+  fontSelect.value = design.font;
+  backgroundSelect.value = design.background;
+  render();
+  popPreview();
+}
+
 // ── UIテーマの切替(system → light → dark)──
 
 const themeToggle = query<HTMLButtonElement>('#theme-toggle');
@@ -194,30 +206,42 @@ function applyTheme(): void {
   themeToggle.setAttribute('aria-label', `テーマ切替(現在: ${PREF_LABEL[themePref]})`);
 }
 
-themeToggle.addEventListener('click', () => {
+function cycleTheme(): void {
   themePref = nextPref(themePref);
   writeStore(THEME_KEY, themePref);
   applyTheme();
-});
+}
 
+themeToggle.addEventListener('click', cycleTheme);
 darkQuery.addEventListener('change', () => {
   if (themePref === 'system') applyTheme();
 });
-
 applyTheme();
 
-query<HTMLButtonElement>('#download').addEventListener('click', () => {
-  const blob = new Blob([currentSvg], { type: 'image/svg+xml' });
+// ── 書き出しとコピー ──
+
+let flashTimer = 0;
+function flash(message: string): void {
+  copied.textContent = message;
+  clearTimeout(flashTimer);
+  flashTimer = window.setTimeout(() => (copied.textContent = ''), 1600);
+}
+
+function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = 'banner.svg';
+  anchor.download = filename;
   anchor.click();
   URL.revokeObjectURL(url);
-});
+}
+
+function downloadSvg(): void {
+  downloadBlob(new Blob([currentSvg], { type: 'image/svg+xml' }), 'banner.svg');
+}
 
 // SVGをcanvasへ2倍解像度で焼いてPNGとして書き出す。READMEに直接置きたい人向け。
-query<HTMLButtonElement>('#download-png').addEventListener('click', () => {
+function downloadPng(): void {
   const [width, height] = sizeSelect.value.split('x').map(Number);
   const scale = 2;
   const svgUrl = URL.createObjectURL(
@@ -232,30 +256,60 @@ query<HTMLButtonElement>('#download-png').addEventListener('click', () => {
     ctx?.drawImage(image, 0, 0, canvas.width, canvas.height);
     URL.revokeObjectURL(svgUrl);
     canvas.toBlob((blob) => {
-      if (!blob) return;
-      const pngUrl = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = pngUrl;
-      anchor.download = 'banner.png';
-      anchor.click();
-      URL.revokeObjectURL(pngUrl);
+      if (blob) downloadBlob(blob, 'banner.png');
     }, 'image/png');
   };
   image.src = svgUrl;
-});
+}
 
-query<HTMLButtonElement>('#copy').addEventListener('click', () => {
-  void navigator.clipboard.writeText(currentSvg).then(() => {
-    copied.textContent = 'コピーした';
-    setTimeout(() => (copied.textContent = ''), 1600);
-  });
-});
+function copyText(text: string, message: string): void {
+  void navigator.clipboard.writeText(text).then(() => flash(message));
+}
 
-query<HTMLButtonElement>('#copy-link').addEventListener('click', () => {
-  void navigator.clipboard.writeText(location.href).then(() => {
-    copied.textContent = '共有リンクをコピーした';
-    setTimeout(() => (copied.textContent = ''), 1600);
-  });
+query<HTMLButtonElement>('#download').addEventListener('click', downloadSvg);
+query<HTMLButtonElement>('#download-png').addEventListener('click', downloadPng);
+query<HTMLButtonElement>('#copy').addEventListener('click', () =>
+  copyText(currentSvg, 'コピーした'),
+);
+query<HTMLButtonElement>('#copy-md').addEventListener('click', () =>
+  copyText(markdownSnippet(titleInput.value || 'nobori'), 'Markdownをコピーした'),
+);
+query<HTMLButtonElement>('#copy-link').addEventListener('click', () =>
+  copyText(location.href, '共有リンクをコピーした'),
+);
+query<HTMLButtonElement>('#shuffle').addEventListener('click', shuffle);
+
+// ── キーボードショートカット(入力中と修飾キー併用は無視)──
+
+document.addEventListener('keydown', (event) => {
+  if (event.metaKey || event.ctrlKey || event.altKey) return;
+  const target = event.target as HTMLElement | null;
+  if (
+    target &&
+    (target.tagName === 'INPUT' ||
+      target.tagName === 'SELECT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.isContentEditable)
+  ) {
+    return;
+  }
+  switch (event.key.toLowerCase()) {
+    case 'd':
+      downloadSvg();
+      break;
+    case 'c':
+      copyText(currentSvg, 'コピーした');
+      break;
+    case 'r':
+      shuffle();
+      break;
+    case 't':
+      cycleTheme();
+      break;
+    default:
+      return;
+  }
+  event.preventDefault();
 });
 
 render();
